@@ -24,22 +24,24 @@
       <p><button type="button" class="primary" id="pickBtn">Choose images&hellip;</button></p>
       <p class="hint">or drag &amp; drop them here &mdash; you can add more at any time</p>
     </div>
-    <div class="row between" id="listBar" hidden>
-      <span id="count" class="mono"></span>
-      <span class="row">
-        <label>Order
+
+    <div id="listBar" hidden>
+      <strong id="count"></strong>
+      <div class="row">
+        <label class="field">order
           <select id="sort">
             <option value="added">as added</option>
             <option value="name">file name</option>
             <option value="date">file date</option>
             <option value="size">file size</option>
-            <option value="manual">manual (drag)</option>
+            <option value="manual">manual</option>
           </select>
         </label>
         <label class="check"><input type="checkbox" id="reverse"> reverse</label>
         <button type="button" id="clear">Clear all</button>
-      </span>
+      </div>
     </div>
+    <p class="hint" id="orderHint" hidden></p>
     <ul id="thumbs" class="thumbs"></ul>
     <p id="loadErrors" class="err" hidden></p>
   </section>
@@ -49,20 +51,20 @@
 
     <div class="grid2">
       <fieldset>
-        <legend><label class="check"><input type="checkbox" id="doAll" checked> One collage with <b>all</b> photos</label></legend>
-        <div class="row">
-          <label>columns <input type="number" id="allCols" min="1" max="60" value="4"></label>
-          <label>rows <input type="number" id="allRows" min="1" max="60" value="4"></label>
-          <button type="button" id="allFit">Fit to photo count</button>
+        <legend><label class="check"><input type="checkbox" id="doAll" checked> One collage, <b>all</b> photos</label></legend>
+        <div class="field-grid">
+          <label class="field">columns <input type="number" id="allCols" min="1" max="60" value="4"></label>
+          <label class="field">rows <input type="number" id="allRows" min="1" max="60" value="4"></label>
+          <span class="field"><span class="lbl">&nbsp;</span><button type="button" id="allFit">Fit to photo count</button></span>
         </div>
         <p class="hint mono" id="allInfo"></p>
       </fieldset>
 
       <fieldset>
         <legend><label class="check"><input type="checkbox" id="doSplit" checked> Split into <b>several</b> collages</label></legend>
-        <div class="row">
-          <label>columns <input type="number" id="splitCols" min="1" max="60" value="2"></label>
-          <label>rows <input type="number" id="splitRows" min="1" max="60" value="1"></label>
+        <div class="field-grid">
+          <label class="field">columns <input type="number" id="splitCols" min="1" max="60" value="2"></label>
+          <label class="field">rows <input type="number" id="splitRows" min="1" max="60" value="1"></label>
         </div>
         <p class="hint mono" id="splitInfo"></p>
       </fieldset>
@@ -70,23 +72,23 @@
 
     <fieldset>
       <legend>Cells</legend>
-      <div class="row wrap">
-        <label>cell size
+      <div class="field-grid">
+        <label class="field">cell size
           <select id="cellMode">
             <option value="auto">auto</option>
             <option value="custom">custom</option>
           </select>
         </label>
-        <label>w <input type="number" id="cellW" min="16" max="8000" value="960" disabled></label>
-        <label>h <input type="number" id="cellH" min="16" max="8000" value="1280" disabled></label>
-        <label>fit
+        <label class="field">cell width <input type="number" id="cellW" min="16" max="8000" value="960" disabled></label>
+        <label class="field">cell height <input type="number" id="cellH" min="16" max="8000" value="1280" disabled></label>
+        <label class="field">fit
           <select id="fit">
             <option value="contain">contain</option>
             <option value="cover">cover</option>
           </select>
         </label>
-        <label>gutter <input type="number" id="gutter" min="0" max="200" value="12"> px</label>
-        <label>background <input type="color" id="bg" value="#ffffff"></label>
+        <label class="field">gutter (px) <input type="number" id="gutter" min="0" max="200" value="12"></label>
+        <label class="field">background <input type="color" id="bg" value="#ffffff"></label>
       </div>
       <p class="hint"><b>auto</b> cell size = the most common photo size in your selection.
         <b>contain</b> keeps every photo whole (margins appear where a photo's shape differs from the cell);
@@ -96,22 +98,25 @@
 
     <fieldset>
       <legend>Output</legend>
-      <div class="row wrap">
-        <label>format
+      <div class="field-grid">
+        <label class="field">format
           <select id="format">
             <option value="image/jpeg">JPEG</option>
             <option value="image/png">PNG</option>
           </select>
         </label>
-        <label>quality <input type="range" id="quality" min="50" max="100" value="92"> <span id="qualityVal" class="mono">92</span></label>
-        <label class="check"><input type="checkbox" id="transparent"> transparent background (PNG only)</label>
-        <label>max size <input type="number" id="maxMp" min="1" max="260" value="40"> MP</label>
-        <label>file prefix <input type="text" id="prefix" value="collage" size="10"></label>
+        <label class="field">quality
+          <span class="row tight"><input type="range" id="quality" min="50" max="100" value="92"><span id="qualityVal" class="mono">92</span></span>
+        </label>
+        <label class="field">max size (MP) <input type="number" id="maxMp" min="1" max="260" value="40"></label>
+        <label class="field">file prefix <input type="text" id="prefix" value="collage"></label>
       </div>
-      <p class="hint">Collages larger than <b>max size</b> are scaled down proportionally so browsers don't refuse to render them. Raise it for maximum detail.</p>
+      <label class="check spaced"><input type="checkbox" id="transparent"> transparent background (PNG only)</label>
+      <p class="hint">Collages larger than <b>max size</b> are scaled down proportionally so browsers don't refuse to
+        render them. Raise it for maximum detail on a desktop.</p>
     </fieldset>
 
-    <div class="row">
+    <div class="actions">
       <button type="button" class="primary big" id="generate" disabled>Generate collages</button>
       <span id="status" class="mono"></span>
     </div>

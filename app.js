@@ -5,7 +5,7 @@ const $ = (id) => document.getElementById(id);
 const el = {
   drop: $('drop'), picker: $('picker'), pickBtn: $('pickBtn'),
   listBar: $('listBar'), count: $('count'), sort: $('sort'), reverse: $('reverse'),
-  clear: $('clear'), thumbs: $('thumbs'), loadErrors: $('loadErrors'),
+  clear: $('clear'), thumbs: $('thumbs'), loadErrors: $('loadErrors'), orderHint: $('orderHint'),
   doAll: $('doAll'), allCols: $('allCols'), allRows: $('allRows'), allFit: $('allFit'), allInfo: $('allInfo'),
   doSplit: $('doSplit'), splitCols: $('splitCols'), splitRows: $('splitRows'), splitInfo: $('splitInfo'),
   cellMode: $('cellMode'), cellW: $('cellW'), cellH: $('cellH'), fit: $('fit'),
@@ -41,14 +41,16 @@ const release = (img) => { if (img.close) img.close(); else if (img._url) URL.re
 const dims = (img) => [img.naturalWidth || img.width, img.naturalHeight || img.height];
 
 const thumbCanvas = document.createElement('canvas');
-thumbCanvas.width = thumbCanvas.height = 200;
 
+/* Keep the photo's real proportions — a square crop here would misrepresent
+   every non-square photo in the picker. */
 function makeThumb(img) {
-  const ctx = thumbCanvas.getContext('2d');
   const [w, h] = dims(img);
-  const s = Math.max(200 / w, 200 / h);
-  ctx.clearRect(0, 0, 200, 200);
-  ctx.drawImage(img, (200 - w * s) / 2, (200 - h * s) / 2, w * s, h * s);
+  const s = Math.min(200 / w, 200 / h, 1);
+  thumbCanvas.width = Math.max(1, Math.round(w * s));
+  thumbCanvas.height = Math.max(1, Math.round(h * s));
+  const ctx = thumbCanvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, thumbCanvas.width, thumbCanvas.height);
   return new Promise((res) => thumbCanvas.toBlob((b) => res(b ? URL.createObjectURL(b) : ''), 'image/jpeg', 0.75));
 }
 
@@ -406,77 +408,112 @@ function setBusy(b) {
   el.pickBtn.disabled = b;
 }
 
-function render() {
+let dragged = null;
+
+function thumbNode(item) {
+  if (item.node) return item.node;
+
+  const li = document.createElement('li');
+  li.draggable = true;
+  li.title = item.name;
+  const img = document.createElement('img');
+  img.src = item.thumb;
+  img.alt = item.name;
+  const badge = document.createElement('span');
+  badge.className = 'idx';
+  const tools = document.createElement('div');
+  tools.className = 'tools';
+
+  const tool = (label, title, fn) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', `${title}: ${item.name}`);
+    b.onclick = fn;
+    tools.append(b);
+    return b;
+  };
+  const prevBtn = tool('\u2039', 'Move earlier', () => move(item, -1));
+  tool('\u2715', 'Remove', () => remove(item));
+  const nextBtn = tool('\u203a', 'Move later', () => move(item, 1));
+  li.append(img, badge, tools);
+
+  li.ondragstart = (e) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.name);
+    dragged = item;
+    li.classList.add('dragging');
+  };
+  li.ondragend = () => { li.classList.remove('dragging'); dragged = null; };
+  li.ondragover = (e) => { if (dragged && dragged !== item) { e.preventDefault(); li.classList.add('dropTarget'); } };
+  li.ondragleave = () => li.classList.remove('dropTarget');
+  li.ondrop = (e) => {
+    e.preventDefault();
+    li.classList.remove('dropTarget');
+    if (!dragged || dragged === item) return;
+    const arr = view();
+    arr.splice(arr.indexOf(dragged), 1); // pull it out first, then locate the target
+    arr.splice(arr.indexOf(item), 0, dragged);
+    commitManual(arr);
+    dragged = null;
+    render();
+  };
+
+  Object.assign(item, { node: li, badge, prevBtn, nextBtn });
+  return li;
+}
+
+/* Tiles are created once and only re-ordered afterwards, so changing the order
+   or editing any other field never makes the images reload and flicker. */
+function renderThumbs() {
   const order = view();
+  const frag = document.createDocumentFragment();
+  order.forEach((item, i) => {
+    frag.append(thumbNode(item));
+    item.badge.textContent = i + 1;
+    item.prevBtn.disabled = i === 0;
+    item.nextBtn.disabled = i === order.length - 1;
+  });
+  el.thumbs.replaceChildren(frag);
+
   const n = order.length;
   el.listBar.hidden = !n;
   el.count.textContent = n ? `${n} photo${n > 1 ? 's' : ''} selected` : '';
+  el.orderHint.hidden = !n;
+  el.orderHint.textContent = el.sort.value === 'manual'
+    ? 'Manual order — drag a photo, or use \u2039 \u203a on it. Choosing another order discards it.'
+    : 'Cells are filled left to right, top to bottom, in this order.';
+}
 
-  el.thumbs.textContent = '';
-  order.forEach((item, i) => {
-    const li = document.createElement('li');
-    li.draggable = true;
-    const img = document.createElement('img');
-    img.src = item.thumb;
-    img.alt = item.name;
-    img.loading = 'lazy';
-    const idx = document.createElement('span');
-    idx.className = 'idx';
-    idx.textContent = i + 1;
-    const tools = document.createElement('div');
-    tools.className = 'tools';
-    for (const [label, title, fn] of [
-      ['\u2039', 'Move earlier', () => move(item, -1)],
-      ['\u2715', `Remove ${item.name}`, () => remove(item)],
-      ['\u203a', 'Move later', () => move(item, 1)],
-    ]) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = label;
-      btn.title = title;
-      btn.setAttribute('aria-label', title);
-      btn.onclick = fn;
-      tools.append(btn);
-    }
-    li.append(img, idx, tools);
-    li.ondragstart = (e) => { e.dataTransfer.setData('text/plain', ''); li.classList.add('dragging'); dragged = item; };
-    li.ondragend = () => li.classList.remove('dragging');
-    li.ondragover = (e) => e.preventDefault();
-    li.ondrop = (e) => {
-      e.preventDefault();
-      if (!dragged || dragged === item) return;
-      const arr = view();
-      arr.splice(arr.indexOf(item), 0, ...arr.splice(arr.indexOf(dragged), 1));
-      commitManual(arr);
-      dragged = null;
-      render();
-    };
-    el.thumbs.append(li);
-  });
-
+function renderInfo() {
+  const n = state.items.length;
   const [cw, ch] = cell();
   const g = Math.max(0, +el.gutter.value || 0);
   el.cellW.disabled = el.cellH.disabled = el.cellMode.value !== 'custom';
   if (el.cellMode.value === 'auto' && n) { el.cellW.value = cw; el.cellH.value = ch; }
+  el.thumbs.style.setProperty('--tile-aspect', `${cw} / ${ch}`);
 
   const cap = Math.max(1, +el.maxMp.value || 40) * 1e6;
   const describe = (cols, rows) => {
     const [w, h] = sheetSize(cols, rows, cw, ch, g);
     const s = Math.min(1, Math.sqrt(cap / (w * h)));
     const out = `${Math.round(w * s)} \u00d7 ${Math.round(h * s)} px`;
-    return s < 0.999 ? `${out} (scaled ${Math.round(s * 100)}% to fit ${el.maxMp.value} MP)` : out;
+    return s < 0.999 ? `${out}, scaled ${Math.round(s * 100)}% to fit ${el.maxMp.value} MP` : out;
   };
 
   if (n) {
     const cells = (+el.allCols.value) * (+el.allRows.value);
     const short = n - cells;
-    el.allInfo.textContent = `${n} photos into ${el.allCols.value}\u00d7${el.allRows.value} = ${cells} cells \u2192 ` +
-      (short > 0 ? `\u26a0 ${short} photo(s) would not fit` : `${cells - n} empty \u00b7 ${describe(+el.allCols.value, +el.allRows.value)}`);
+    el.allInfo.textContent = short > 0
+      ? `\u26a0 ${cells} cells cannot hold ${n} photos \u2014 ${short} would be left out`
+      : `${n} photos \u2192 ${cells} cells, ${cells - n} empty \u00b7 ${describe(+el.allCols.value, +el.allRows.value)}`;
+
     const per = Math.max(1, (+el.splitCols.value) * (+el.splitRows.value));
     const count = Math.ceil(n / per);
     const last = n - per * (count - 1);
-    el.splitInfo.textContent = `${per} per collage \u2192 ${count} collage${count > 1 ? 's' : ''} ` +
-      `(last one has ${last}) \u00b7 ${describe(+el.splitCols.value, +el.splitRows.value)}`;
+    el.splitInfo.textContent = `${per} per collage \u2192 ${count} collage${count > 1 ? 's' : ''}` +
+      (last === per ? '' : `, last has ${last}`) + ` \u00b7 ${describe(+el.splitCols.value, +el.splitRows.value)}`;
   } else {
     el.allInfo.textContent = el.splitInfo.textContent = 'Add photos to see the output size.';
   }
@@ -487,7 +524,7 @@ function render() {
   el.generate.disabled = state.busy || !jobs().length;
 }
 
-let dragged = null;
+function render() { renderThumbs(); renderInfo(); }
 
 /* ---------- wiring ---------- */
 
@@ -519,14 +556,18 @@ el.allFit.onclick = () => {
   const g = bestGrid(n, cw, ch);
   el.allCols.value = g.cols;
   el.allRows.value = g.rows;
-  render();
+  renderInfo();
 };
 
-for (const c of [el.sort, el.reverse, el.doAll, el.doSplit, el.allCols, el.allRows,
-                 el.splitCols, el.splitRows, el.cellMode, el.cellW, el.cellH, el.fit,
-                 el.gutter, el.bg, el.format, el.quality, el.transparent, el.maxMp, el.prefix]) {
-  c.addEventListener('input', render);
-  c.addEventListener('change', render);
+/* Only the two order controls affect the tile sequence; everything else just
+   changes the numbers, so it must not touch the thumbnail list. */
+for (const c of [el.sort, el.reverse]) c.addEventListener('change', render);
+
+for (const c of [el.doAll, el.doSplit, el.allCols, el.allRows, el.splitCols, el.splitRows,
+                 el.cellMode, el.cellW, el.cellH, el.fit, el.gutter, el.bg,
+                 el.format, el.quality, el.transparent, el.maxMp, el.prefix]) {
+  c.addEventListener('input', renderInfo);
+  c.addEventListener('change', renderInfo);
 }
 
 el.generate.onclick = generate;
