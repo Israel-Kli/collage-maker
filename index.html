@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232563eb'/><g fill='%23fff'><rect x='6' y='6' width='8' height='8' rx='1.5'/><rect x='18' y='6' width='8' height='8' rx='1.5'/><rect x='6' y='18' width='8' height='8' rx='1.5'/><rect x='18' y='18' width='8' height='8' rx='1.5'/></g></svg>">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 <header>
@@ -55,7 +55,7 @@
         <div class="field-grid">
           <label class="field">columns <input type="number" id="allCols" min="1" max="60" value="4"></label>
           <label class="field">rows <input type="number" id="allRows" min="1" max="60" value="4"></label>
-          <span class="field"><span class="lbl">&nbsp;</span><button type="button" id="allFit">Fit to photo count</button></span>
+          <button type="button" id="allFit">Fit to photo count</button>
         </div>
         <p class="hint mono" id="allInfo"></p>
       </fieldset>
@@ -144,7 +144,7 @@
 <!-- ?v= must be bumped when app.js/styles.css/zip.js change: GitHub Pages
      caches assets for ~10 minutes, so returning visitors would otherwise
      keep running the previous version. -->
-<script src="zip.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="zip.js?v=3"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

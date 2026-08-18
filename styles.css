@@ -77,6 +77,9 @@ legend b { color: var(--ink); }
   gap: 14px 18px;
   align-items: end;
 }
+/* A bare button has no caption above it, so give it its own full-width row
+   rather than letting a two-line label out-grow the inputs beside it. */
+.field-grid > button { grid-column: 1 / -1; justify-self: start; padding: 9px 18px; }
 
 .field {
   display: flex;
@@ -88,6 +91,8 @@ legend b { color: var(--ink); }
   color: var(--muted);
 }
 .field > input, .field > select, .field > button { width: 100%; }
+/* Match the 44px height of a plain control so captions line up across the row */
+.field > .row.tight { min-height: 44px; }
 .field input[type="number"], .field input[type="text"] { width: 100%; }
 .field input[type="color"] { width: 92px; height: 44px; }
 .field .lbl { display: block; }
@@ -141,6 +146,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   margin-top: 16px;
 }
 #listBar .row { align-items: end; }
+/* sits beside a 44px select, so it needs the same box to read as aligned */
+#listBar label.check { min-height: 44px; }
 #count { font-size: 0.95rem; padding-bottom: 10px; }
 
 .hint { color: var(--muted); font-size: 0.85rem; margin: 10px 0 0; line-height: 1.45; }
