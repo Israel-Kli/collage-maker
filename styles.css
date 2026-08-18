@@ -38,6 +38,9 @@ body {
 header, main, footer { max-width: 1040px; margin: 0 auto; }
 
 header { padding: 22px 4px 6px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.lang { flex: none; }
+.lang select { width: auto; min-height: 40px; padding: 7px 10px; }
 h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
 h2 { margin: 0 0 14px; font-size: 1.05rem; }
 .sub { margin: 6px 0 0; color: var(--muted); font-size: 0.95rem; }

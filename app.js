@@ -15,6 +15,7 @@ const el = {
   generate: $('generate'), status: $('status'), barWrap: $('barWrap'), bar: $('bar'),
   resultsCard: $('resultsCard'), results: $('results'),
   saveAllBtn: $('saveAllBtn'), zipBtn: $('zipBtn'), saveHint: $('saveHint'),
+  lang: $('lang'),
 };
 
 const state = { items: [], results: [], added: 0, busy: false };
@@ -68,7 +69,7 @@ async function addFiles(fileList) {
     const key = `${file.name}|${file.size}|${file.lastModified}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    setStatus(`Reading ${n + 1} / ${files.length}\u2026`);
+    setStatus(t('statusReading', { i: n + 1, n: files.length }));
     progress((n + 1) / files.length);
     try {
       const img = await decode(file);
@@ -85,8 +86,8 @@ async function addFiles(fileList) {
 
   el.loadErrors.hidden = !failed.length;
   if (failed.length) {
-    el.loadErrors.textContent = `Could not read ${failed.length} file(s) — browsers cannot decode HEIC/HEIF:\n` +
-      failed.slice(0, 8).join(', ') + (failed.length > 8 ? `, +${failed.length - 8} more` : '');
+    el.loadErrors.textContent = `${t('errHeic', { n: failed.length })}\n` +
+      failed.slice(0, 8).join(', ') + (failed.length > 8 ? t('errMore', { n: failed.length - 8 }) : '');
   }
   setBusy(false);
   setStatus('');
@@ -232,7 +233,7 @@ async function renderCollage(items, cols, rows, name, onStep) {
     if (out) return { name, blob: out.blob, w: out.w, h: out.h, scale: out.scale };
     budget = Math.floor(budget / 2);
   }
-  throw new Error(`"${name}" is too large for this browser to render — lower "max size".`);
+  throw new Error(t('errTooLarge', { name }));
 }
 
 function jobs() {
@@ -268,7 +269,7 @@ async function generate() {
   const step = async () => {
     done++;
     progress(done / total);
-    setStatus(`Rendering ${done} / ${total} photos\u2026`);
+    setStatus(t('statusRendering', { i: done, n: total }));
     if (done % 3 === 0) await new Promise((r) => setTimeout(r));
   };
 
@@ -279,7 +280,7 @@ async function generate() {
       showResult(res);
     }
     const shrunk = state.results.filter((r) => r.scale < 0.999).length;
-    setStatus(`Done — ${state.results.length} collage(s)` + (shrunk ? `, ${shrunk} scaled down to fit the size limit` : ''));
+    setStatus(tn('statusDone', state.results.length) + (shrunk ? t('statusScaled', { n: shrunk }) : ''));
   } catch (err) {
     setStatus('');
     el.loadErrors.hidden = false;
@@ -296,15 +297,15 @@ function clearResults() {
   state.results = [];
   el.results.textContent = '';
   el.saveHint.textContent = '';
+  delete el.saveHint.dataset.i18n;
   el.resultsCard.hidden = true;
 }
 
 function showResult(r) {
   r.url = URL.createObjectURL(r.blob);
   el.resultsCard.hidden = false;
-  el.saveHint.textContent = canPickFolder
-    ? 'Save all writes every collage straight into a folder you pick — no zip to open.'
-    : 'Save all downloads the collages one after another; your browser may ask once to allow multiple files. Each row below also has its own Save button.';
+  el.saveHint.dataset.i18n = canPickFolder ? 'saveHintFolder' : 'saveHintSequential';
+  el.saveHint.textContent = t(el.saveHint.dataset.i18n);
   const li = document.createElement('li');
   const img = document.createElement('img');
   img.src = r.url;
@@ -321,7 +322,8 @@ function showResult(r) {
   a.className = 'dl';
   a.href = r.url;
   a.download = r.name;
-  a.textContent = 'Save';
+  a.dataset.i18n = 'save'; // lets applyStaticText refresh it on a language switch
+  a.textContent = t('save');
   li.append(img, meta, a);
   el.results.append(li);
 }
@@ -347,9 +349,9 @@ async function saveToFolder() {
     await writable.write(r.blob);
     await writable.close();
     n++;
-    setStatus(`Saving ${n} / ${state.results.length}…`);
+    setStatus(t('statusSaving', { i: n, n: state.results.length }));
   }
-  setStatus(`Saved ${n} file${n > 1 ? 's' : ''} to the folder you chose`);
+  setStatus(tn('statusSaved', n));
 }
 
 /* Everywhere else: fire the downloads one at a time. Browsers throttle bursts,
@@ -357,10 +359,10 @@ async function saveToFolder() {
 async function saveSeparately() {
   for (let i = 0; i < state.results.length; i++) {
     saveOne(state.results[i]);
-    setStatus(`Sending ${i + 1} / ${state.results.length} to downloads…`);
+    setStatus(t('statusSending', { i: i + 1, n: state.results.length }));
     await new Promise((r) => setTimeout(r, 400));
   }
-  setStatus(`Sent ${state.results.length} file(s) to your downloads`);
+  setStatus(tn('statusSent', state.results.length));
 }
 
 async function saveAll() {
@@ -379,8 +381,7 @@ async function saveAll() {
 async function downloadZip() {
   if (!state.results.length) return;
   el.zipBtn.disabled = true;
-  const prev = el.zipBtn.textContent;
-  el.zipBtn.textContent = 'Packing…';
+  el.zipBtn.textContent = t('packing');
   const entries = [];
   for (const r of state.results) entries.push({ name: r.name, data: new Uint8Array(await r.blob.arrayBuffer()) });
   const url = URL.createObjectURL(makeZip(entries));
@@ -389,13 +390,13 @@ async function downloadZip() {
   a.download = `${(el.prefix.value.trim() || 'collage')}s.zip`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
-  el.zipBtn.textContent = prev;
+  el.zipBtn.textContent = t('asZip');
   el.zipBtn.disabled = false;
 }
 
 /* ---------- UI ---------- */
 
-function setStatus(t) { el.status.textContent = t; }
+function setStatus(text) { el.status.textContent = text; }
 
 function progress(f) {
   el.barWrap.hidden = f <= 0;
@@ -434,9 +435,9 @@ function thumbNode(item) {
     tools.append(b);
     return b;
   };
-  const prevBtn = tool('\u2039', 'Move earlier', () => move(item, -1));
-  tool('\u2715', 'Remove', () => remove(item));
-  const nextBtn = tool('\u203a', 'Move later', () => move(item, 1));
+  const prevBtn = tool('\u2039', t('moveEarlier'), () => move(item, -1));
+  tool('\u2715', t('remove'), () => remove(item));
+  const nextBtn = tool('\u203a', t('moveLater'), () => move(item, 1));
   li.append(img, badge, tools);
 
   li.ondragstart = (e) => {
@@ -479,11 +480,9 @@ function renderThumbs() {
 
   const n = order.length;
   el.listBar.hidden = !n;
-  el.count.textContent = n ? `${n} photo${n > 1 ? 's' : ''} selected` : '';
+  el.count.textContent = n ? tn('countSelected', n) : '';
   el.orderHint.hidden = !n;
-  el.orderHint.textContent = el.sort.value === 'manual'
-    ? 'Manual order — drag a photo, or use \u2039 \u203a on it. Choosing another order discards it.'
-    : 'Cells are filled left to right, top to bottom, in this order.';
+  el.orderHint.textContent = t(el.sort.value === 'manual' ? 'orderHintManual' : 'orderHintNormal');
 }
 
 function renderInfo() {
@@ -498,24 +497,29 @@ function renderInfo() {
   const describe = (cols, rows) => {
     const [w, h] = sheetSize(cols, rows, cw, ch, g);
     const s = Math.min(1, Math.sqrt(cap / (w * h)));
-    const out = `${Math.round(w * s)} \u00d7 ${Math.round(h * s)} px`;
-    return s < 0.999 ? `${out}, scaled ${Math.round(s * 100)}% to fit ${el.maxMp.value} MP` : out;
+    const size = { w: Math.round(w * s), h: Math.round(h * s) };
+    return s < 0.999
+      ? t('dimsScaled', { ...size, pct: Math.round(s * 100), mp: el.maxMp.value })
+      : t('dims', size);
   };
 
   if (n) {
     const cells = (+el.allCols.value) * (+el.allRows.value);
     const short = n - cells;
     el.allInfo.textContent = short > 0
-      ? `\u26a0 ${cells} cells cannot hold ${n} photos \u2014 ${short} would be left out`
-      : `${n} photos \u2192 ${cells} cells, ${cells - n} empty \u00b7 ${describe(+el.allCols.value, +el.allRows.value)}`;
+      ? t('infoAllShort', { cells, n, short })
+      : t('infoAll', { n, cells, empty: cells - n, dims: describe(+el.allCols.value, +el.allRows.value) });
 
     const per = Math.max(1, (+el.splitCols.value) * (+el.splitRows.value));
     const count = Math.ceil(n / per);
     const last = n - per * (count - 1);
-    el.splitInfo.textContent = `${per} per collage \u2192 ${count} collage${count > 1 ? 's' : ''}` +
-      (last === per ? '' : `, last has ${last}`) + ` \u00b7 ${describe(+el.splitCols.value, +el.splitRows.value)}`;
+    el.splitInfo.textContent = tn('infoSplit', count, {
+      per, count,
+      tail: last === per ? '' : t('infoSplitTail', { last }),
+      dims: describe(+el.splitCols.value, +el.splitRows.value),
+    });
   } else {
-    el.allInfo.textContent = el.splitInfo.textContent = 'Add photos to see the output size.';
+    el.allInfo.textContent = el.splitInfo.textContent = t('addPhotosFirst');
   }
 
   el.transparent.disabled = el.format.value !== 'image/png';
@@ -574,4 +578,11 @@ el.generate.onclick = generate;
 el.saveAllBtn.onclick = saveAll;
 el.zipBtn.onclick = downloadZip;
 
+el.lang.onchange = () => {
+  setLang(el.lang.value);
+  render(); // status text stays in the previous language until it next changes
+};
+
+el.lang.value = initLang();
+applyStaticText();
 render();

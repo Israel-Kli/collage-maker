@@ -1,44 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Collage Maker — grid collages in your browser</title>
+<title>Collage Maker</title>
 <meta name="description" content="Build photo-grid collages entirely in your browser. Nothing is uploaded.">
 <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232563eb'/><g fill='%23fff'><rect x='6' y='6' width='8' height='8' rx='1.5'/><rect x='18' y='6' width='8' height='8' rx='1.5'/><rect x='6' y='18' width='8' height='8' rx='1.5'/><rect x='18' y='18' width='8' height='8' rx='1.5'/></g></svg>">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <header>
-  <h1>Collage Maker</h1>
-  <p class="sub">Grid collages, any rows &times; columns. Everything runs in your browser &mdash; no upload, no server, no account.</p>
+  <div class="topbar">
+    <h1 data-i18n="title">Collage Maker</h1>
+    <label class="field lang" data-i18n-title="language">
+      <select id="lang">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+  </div>
+  <p class="sub" data-i18n="tagline"></p>
 </header>
 
 <main>
   <section class="card">
-    <h2>1. Pick photos</h2>
+    <h2 data-i18n="step1"></h2>
     <div id="drop" class="drop">
       <input type="file" id="picker" accept="image/*" multiple hidden>
-      <p><button type="button" class="primary" id="pickBtn">Choose images&hellip;</button></p>
-      <p class="hint">or drag &amp; drop them here &mdash; you can add more at any time</p>
+      <p><button type="button" class="primary" id="pickBtn" data-i18n="choose"></button></p>
+      <p class="hint" data-i18n="dropHint"></p>
     </div>
 
     <div id="listBar" hidden>
       <strong id="count"></strong>
       <div class="row">
-        <label class="field">order
+        <label class="field"><span data-i18n="order"></span>
           <select id="sort">
-            <option value="added">as added</option>
-            <option value="name">file name</option>
-            <option value="date">file date</option>
-            <option value="size">file size</option>
-            <option value="manual">manual</option>
+            <option value="added" data-i18n="orderAdded"></option>
+            <option value="name" data-i18n="orderName"></option>
+            <option value="date" data-i18n="orderDate"></option>
+            <option value="size" data-i18n="orderSize"></option>
+            <option value="manual" data-i18n="orderManual"></option>
           </select>
         </label>
-        <label class="check"><input type="checkbox" id="reverse"> reverse</label>
-        <button type="button" id="clear">Clear all</button>
+        <label class="check"><input type="checkbox" id="reverse"> <span data-i18n="reverse"></span></label>
+        <button type="button" id="clear" data-i18n="clearAll"></button>
       </div>
     </div>
     <p class="hint" id="orderHint" hidden></p>
@@ -47,77 +55,73 @@
   </section>
 
   <section class="card">
-    <h2>2. Layout</h2>
+    <h2 data-i18n="step2"></h2>
 
     <div class="grid2">
       <fieldset>
-        <legend><label class="check"><input type="checkbox" id="doAll" checked> One collage, <b>all</b> photos</label></legend>
+        <legend><label class="check"><input type="checkbox" id="doAll" checked> <span data-i18n="doAll"></span></label></legend>
         <div class="field-grid">
-          <label class="field">columns <input type="number" id="allCols" min="1" max="60" value="4"></label>
-          <label class="field">rows <input type="number" id="allRows" min="1" max="60" value="4"></label>
-          <button type="button" id="allFit">Fit to photo count</button>
+          <label class="field"><span data-i18n="columns"></span> <input type="number" id="allCols" min="1" max="60" value="4"></label>
+          <label class="field"><span data-i18n="rows"></span> <input type="number" id="allRows" min="1" max="60" value="4"></label>
+          <button type="button" id="allFit" data-i18n="fitToCount"></button>
         </div>
         <p class="hint mono" id="allInfo"></p>
       </fieldset>
 
       <fieldset>
-        <legend><label class="check"><input type="checkbox" id="doSplit" checked> Split into <b>several</b> collages</label></legend>
+        <legend><label class="check"><input type="checkbox" id="doSplit" checked> <span data-i18n="doSplit"></span></label></legend>
         <div class="field-grid">
-          <label class="field">columns <input type="number" id="splitCols" min="1" max="60" value="2"></label>
-          <label class="field">rows <input type="number" id="splitRows" min="1" max="60" value="1"></label>
+          <label class="field"><span data-i18n="columns"></span> <input type="number" id="splitCols" min="1" max="60" value="2"></label>
+          <label class="field"><span data-i18n="rows"></span> <input type="number" id="splitRows" min="1" max="60" value="1"></label>
         </div>
         <p class="hint mono" id="splitInfo"></p>
       </fieldset>
     </div>
 
     <fieldset>
-      <legend>Cells</legend>
+      <legend data-i18n="cellsLegend"></legend>
       <div class="field-grid">
-        <label class="field">cell size
+        <label class="field"><span data-i18n="cellSize"></span>
           <select id="cellMode">
-            <option value="auto">auto</option>
-            <option value="custom">custom</option>
+            <option value="auto" data-i18n="auto"></option>
+            <option value="custom" data-i18n="custom"></option>
           </select>
         </label>
-        <label class="field">cell width <input type="number" id="cellW" min="16" max="8000" value="960" disabled></label>
-        <label class="field">cell height <input type="number" id="cellH" min="16" max="8000" value="1280" disabled></label>
-        <label class="field">fit
+        <label class="field"><span data-i18n="cellWidth"></span> <input type="number" id="cellW" min="16" max="8000" value="960" disabled></label>
+        <label class="field"><span data-i18n="cellHeight"></span> <input type="number" id="cellH" min="16" max="8000" value="1280" disabled></label>
+        <label class="field"><span data-i18n="fit"></span>
           <select id="fit">
-            <option value="contain">contain</option>
-            <option value="cover">cover</option>
+            <option value="contain" data-i18n="contain"></option>
+            <option value="cover" data-i18n="cover"></option>
           </select>
         </label>
-        <label class="field">gutter (px) <input type="number" id="gutter" min="0" max="200" value="12"></label>
-        <label class="field">background <input type="color" id="bg" value="#ffffff"></label>
+        <label class="field"><span data-i18n="gutter"></span> <input type="number" id="gutter" min="0" max="200" value="12"></label>
+        <label class="field"><span data-i18n="background"></span> <input type="color" id="bg" value="#ffffff"></label>
       </div>
-      <p class="hint"><b>auto</b> cell size = the most common photo size in your selection.
-        <b>contain</b> keeps every photo whole (margins appear where a photo's shape differs from the cell);
-        <b>cover</b> fills the cell and crops the edges.
-        With auto + contain, photos matching the common size land at native resolution — no scaling, no cropping.</p>
+      <p class="hint" data-i18n="cellsHint"></p>
     </fieldset>
 
     <fieldset>
-      <legend>Output</legend>
+      <legend data-i18n="outputLegend"></legend>
       <div class="field-grid">
-        <label class="field">format
+        <label class="field"><span data-i18n="format"></span>
           <select id="format">
             <option value="image/jpeg">JPEG</option>
             <option value="image/png">PNG</option>
           </select>
         </label>
-        <label class="field">quality
+        <label class="field"><span data-i18n="quality"></span>
           <span class="row tight"><input type="range" id="quality" min="50" max="100" value="92"><span id="qualityVal" class="mono">92</span></span>
         </label>
-        <label class="field">max size (MP) <input type="number" id="maxMp" min="1" max="260" value="40"></label>
-        <label class="field">file prefix <input type="text" id="prefix" value="collage"></label>
+        <label class="field"><span data-i18n="maxSize"></span> <input type="number" id="maxMp" min="1" max="260" value="40"></label>
+        <label class="field"><span data-i18n="filePrefix"></span> <input type="text" id="prefix" value="collage"></label>
       </div>
-      <label class="check spaced"><input type="checkbox" id="transparent"> transparent background (PNG only)</label>
-      <p class="hint">Collages larger than <b>max size</b> are scaled down proportionally so browsers don't refuse to
-        render them. Raise it for maximum detail on a desktop.</p>
+      <label class="check spaced"><input type="checkbox" id="transparent"> <span data-i18n="transparentBg"></span></label>
+      <p class="hint" data-i18n="outputHint"></p>
     </fieldset>
 
     <div class="actions">
-      <button type="button" class="primary big" id="generate" disabled>Generate collages</button>
+      <button type="button" class="primary big" id="generate" data-i18n="generate" disabled></button>
       <span id="status" class="mono"></span>
     </div>
     <div class="bar" id="barWrap" hidden><div id="bar"></div></div>
@@ -125,10 +129,10 @@
 
   <section class="card" id="resultsCard" hidden>
     <div class="row between">
-      <h2>3. Download</h2>
+      <h2 data-i18n="step3"></h2>
       <span class="row">
-        <button type="button" class="primary" id="saveAllBtn">Save all</button>
-        <button type="button" id="zipBtn" class="ghost">as .zip</button>
+        <button type="button" class="primary" id="saveAllBtn" data-i18n="saveAll"></button>
+        <button type="button" id="zipBtn" class="ghost" data-i18n="asZip"></button>
       </span>
     </div>
     <p class="hint" id="saveHint"></p>
@@ -137,14 +141,15 @@
 </main>
 
 <footer>
-  <p>Your photos never leave this device: no network request is made with them. Works offline once loaded.</p>
-  <p class="hint">HEIC/HEIF files can't be decoded by browsers — convert them to JPEG first.</p>
+  <p data-i18n="footerPrivacy"></p>
+  <p class="hint" data-i18n="footerHeic"></p>
 </footer>
 
-<!-- ?v= must be bumped when app.js/styles.css/zip.js change: GitHub Pages
-     caches assets for ~10 minutes, so returning visitors would otherwise
-     keep running the previous version. -->
-<script src="zip.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<!-- ?v= must be bumped when a .js/.css file changes: GitHub Pages caches
+     assets for ~10 minutes, so returning visitors would otherwise keep
+     running the previous version. -->
+<script src="i18n.js?v=4"></script>
+<script src="zip.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

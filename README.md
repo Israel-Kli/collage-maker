@@ -20,6 +20,7 @@ no account, no image hosting, no cost. Once the page has loaded it works offline
   placed at **native resolution** — no scaling, no cropping — or set it by hand
 - **Fit mode**: `contain` (whole photo, margins where shapes differ) or `cover` (fill and crop)
 - Adjustable gutter, background colour, JPEG quality, transparent PNG
+- **Russian and English**, Russian by default; the choice is remembered per browser
 - **Save all** without any zip to open: on Chrome/Edge desktop it writes every collage
   straight into a folder you pick; on other browsers it sends them to your downloads one
   after another. Each collage also has its own Save button, and a `.zip` is kept only as a
@@ -60,6 +61,19 @@ Opening `index.html` directly from disk also works.
 GitHub Pages serves static files only, which is all this needs. Public repos get Pages for
 free with no usage cost.
 
+## Translations
+
+All text lives in `i18n.js` as two flat dictionaries, `ru` and `en`. To change wording,
+edit the value; to add a string, add the same key to **both** dictionaries and reference it
+either as `data-i18n="key"` on an element in `index.html` or as `t('key')` in `app.js`.
+Placeholders are `{name}` and are filled from the second argument: `t('dims', {w, h})`.
+
+Counted strings use `tn('key', n)` and need `key_one` / `key_other`. Russian would require
+three plural forms, so those strings are phrased as labels ("Коллажей: 3") where one form
+covers every number; only English actually varies.
+
+`ru` is the default for a first-time visitor. The choice is stored in `localStorage`.
+
 ## Editing it
 
 GitHub Pages serves assets with a ~10 minute cache, so after changing `app.js`,
@@ -73,5 +87,6 @@ until the cache expires.
 |---|---|
 | `index.html` | markup and controls |
 | `styles.css` | mobile-first responsive styling |
+| `i18n.js` | Russian/English dictionaries and the `t()` helper |
 | `app.js` | file handling, ordering, canvas rendering, downloads |
 | `zip.js` | dependency-free STORE-only ZIP writer, used only by the `.zip` fallback |
