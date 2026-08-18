@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collage Maker — grid collages in your browser</title>
+<meta name="description" content="Build photo-grid collages entirely in your browser. Nothing is uploaded.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Collage Maker</h1>
+  <p class="sub">Grid collages, any rows &times; columns. Everything runs in your browser &mdash; no upload, no server, no account.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>1. Pick photos</h2>
+    <div id="drop" class="drop">
+      <input type="file" id="picker" accept="image/*" multiple hidden>
+      <p><button type="button" class="primary" id="pickBtn">Choose images&hellip;</button></p>
+      <p class="hint">or drag &amp; drop them here &mdash; you can add more at any time</p>
+    </div>
+    <div class="row between" id="listBar" hidden>
+      <span id="count" class="mono"></span>
+      <span class="row">
+        <label>Order
+          <select id="sort">
+            <option value="added">as added</option>
+            <option value="name">file name</option>
+            <option value="date">file date</option>
+            <option value="size">file size</option>
+            <option value="manual">manual (drag)</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="reverse"> reverse</label>
+        <button type="button" id="clear">Clear all</button>
+      </span>
+    </div>
+    <ul id="thumbs" class="thumbs"></ul>
+    <p id="loadErrors" class="err" hidden></p>
+  </section>
+
+  <section class="card">
+    <h2>2. Layout</h2>
+
+    <div class="grid2">
+      <fieldset>
+        <legend><label class="check"><input type="checkbox" id="doAll" checked> One collage with <b>all</b> photos</label></legend>
+        <div class="row">
+          <label>columns <input type="number" id="allCols" min="1" max="60" value="4"></label>
+          <label>rows <input type="number" id="allRows" min="1" max="60" value="4"></label>
+          <button type="button" id="allFit">Fit to photo count</button>
+        </div>
+        <p class="hint mono" id="allInfo"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend><label class="check"><input type="checkbox" id="doSplit" checked> Split into <b>several</b> collages</label></legend>
+        <div class="row">
+          <label>columns <input type="number" id="splitCols" min="1" max="60" value="2"></label>
+          <label>rows <input type="number" id="splitRows" min="1" max="60" value="1"></label>
+        </div>
+        <p class="hint mono" id="splitInfo"></p>
+      </fieldset>
+    </div>
+
+    <fieldset>
+      <legend>Cells</legend>
+      <div class="row wrap">
+        <label>cell size
+          <select id="cellMode">
+            <option value="auto">auto</option>
+            <option value="custom">custom</option>
+          </select>
+        </label>
+        <label>w <input type="number" id="cellW" min="16" max="8000" value="960" disabled></label>
+        <label>h <input type="number" id="cellH" min="16" max="8000" value="1280" disabled></label>
+        <label>fit
+          <select id="fit">
+            <option value="contain">contain</option>
+            <option value="cover">cover</option>
+          </select>
+        </label>
+        <label>gutter <input type="number" id="gutter" min="0" max="200" value="12"> px</label>
+        <label>background <input type="color" id="bg" value="#ffffff"></label>
+      </div>
+      <p class="hint"><b>auto</b> cell size = the most common photo size in your selection.
+        <b>contain</b> keeps every photo whole (margins appear where a photo's shape differs from the cell);
+        <b>cover</b> fills the cell and crops the edges.
+        With auto + contain, photos matching the common size land at native resolution — no scaling, no cropping.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Output</legend>
+      <div class="row wrap">
+        <label>format
+          <select id="format">
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </label>
+        <label>quality <input type="range" id="quality" min="50" max="100" value="92"> <span id="qualityVal" class="mono">92</span></label>
+        <label class="check"><input type="checkbox" id="transparent"> transparent background (PNG only)</label>
+        <label>max size <input type="number" id="maxMp" min="1" max="260" value="40"> MP</label>
+        <label>file prefix <input type="text" id="prefix" value="collage" size="10"></label>
+      </div>
+      <p class="hint">Collages larger than <b>max size</b> are scaled down proportionally so browsers don't refuse to render them. Raise it for maximum detail.</p>
+    </fieldset>
+
+    <div class="row">
+      <button type="button" class="primary big" id="generate" disabled>Generate collages</button>
+      <span id="status" class="mono"></span>
+    </div>
+    <div class="bar" id="barWrap" hidden><div id="bar"></div></div>
+  </section>
+
+  <section class="card" id="resultsCard" hidden>
+    <div class="row between">
+      <h2>3. Download</h2>
+      <button type="button" class="primary" id="zipBtn">Download all (.zip)</button>
+    </div>
+    <ul id="results" class="results"></ul>
+  </section>
+</main>
+
+<footer>
+  <p>Your photos never leave this device: no network request is made with them. Works offline once loaded.</p>
+  <p class="hint">HEIC/HEIF files can't be decoded by browsers — convert them to JPEG first.</p>
+</footer>
+
+<script src="zip.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
