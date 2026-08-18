@@ -18,7 +18,7 @@ const el = {
   lang: $('lang'),
 };
 
-const state = { items: [], results: [], added: 0, busy: false };
+const state = { items: [], results: [], added: 0, busy: false, autoFitAll: true, fittedCount: 0 };
 
 /* Phones have much tighter canvas limits than desktops. */
 const smallTouch = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 820;
@@ -153,6 +153,25 @@ function cell() {
 }
 
 const sheetSize = (cols, rows, cw, ch, g) => [cols * cw + (cols + 1) * g, rows * ch + (rows + 1) * g];
+
+function applyFitToCount() {
+  const n = state.items.length;
+  if (!n) return;
+  const [cw, ch] = cell();
+  const g = bestGrid(n, cw, ch);
+  el.allCols.value = g.cols;
+  el.allRows.value = g.rows;
+  state.fittedCount = n;
+}
+
+/* Refits itself whenever the number of photos changes, but only while the grid
+   hasn't been set by hand — otherwise adding a photo would silently discard a
+   deliberate choice. Typing into columns/rows switches it off; the button
+   switches it back on. */
+function maybeAutoFit() {
+  const n = state.items.length;
+  if (state.autoFitAll && n && n !== state.fittedCount) applyFitToCount();
+}
 
 /* Nearest-to-square grid for n cells, penalising empty cells. */
 function bestGrid(n, cw, ch) {
@@ -486,6 +505,7 @@ function renderThumbs() {
 }
 
 function renderInfo() {
+  maybeAutoFit(); // must settle the grid before the cell counts below are read
   const n = state.items.length;
   const [cw, ch] = cell();
   const g = Math.max(0, +el.gutter.value || 0);
@@ -554,14 +574,15 @@ el.clear.onclick = () => {
 };
 
 el.allFit.onclick = () => {
-  const n = view().length;
-  if (!n) return;
-  const [cw, ch] = cell();
-  const g = bestGrid(n, cw, ch);
-  el.allCols.value = g.cols;
-  el.allRows.value = g.rows;
+  state.autoFitAll = true;
+  applyFitToCount();
   renderInfo();
 };
+
+/* A hand-typed grid wins over the automatic fit until the button is pressed. */
+for (const c of [el.allCols, el.allRows]) {
+  c.addEventListener('input', () => { state.autoFitAll = false; });
+}
 
 /* Only the two order controls affect the tile sequence; everything else just
    changes the numbers, so it must not touch the thumbnail list. */

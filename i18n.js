@@ -33,6 +33,7 @@ const STRINGS = {
     columns: 'столбцы',
     rows: 'строки',
     fitToCount: 'Подобрать под количество фото',
+    fitToCountTitle: 'Подбирается автоматически при изменении числа фото. Если задать столбцы или строки вручную, автоподбор отключится — нажмите, чтобы включить снова.',
 
     cellsLegend: 'Ячейки',
     cellSize: 'размер ячейки',
@@ -123,6 +124,7 @@ const STRINGS = {
     columns: 'columns',
     rows: 'rows',
     fitToCount: 'Fit to photo count',
+    fitToCountTitle: 'Fits automatically when the number of photos changes. Setting columns or rows by hand turns that off — press to turn it back on.',
 
     cellsLegend: 'Cells',
     cellSize: 'cell size',
