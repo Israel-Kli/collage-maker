@@ -121,8 +121,12 @@
   <section class="card" id="resultsCard" hidden>
     <div class="row between">
       <h2>3. Download</h2>
-      <button type="button" class="primary" id="zipBtn">Download all (.zip)</button>
+      <span class="row">
+        <button type="button" class="primary" id="saveAllBtn">Save all</button>
+        <button type="button" id="zipBtn" class="ghost">as .zip</button>
+      </span>
     </div>
+    <p class="hint" id="saveHint"></p>
     <ul id="results" class="results"></ul>
   </section>
 </main>

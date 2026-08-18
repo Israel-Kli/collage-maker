@@ -92,6 +92,7 @@ input:disabled { opacity: 0.45; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 .primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+.ghost { background: transparent; color: var(--muted); font-size: 0.85rem; }
 .big { padding: 12px 20px; min-height: 50px; }
 
 .drop {

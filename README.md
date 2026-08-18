@@ -20,7 +20,10 @@ no account, no image hosting, no cost. Once the page has loaded it works offline
   placed at **native resolution** — no scaling, no cropping — or set it by hand
 - **Fit mode**: `contain` (whole photo, margins where shapes differ) or `cover` (fill and crop)
 - Adjustable gutter, background colour, JPEG quality, transparent PNG
-- Download collages one by one, or all at once as a `.zip`
+- **Save all** without any zip to open: on Chrome/Edge desktop it writes every collage
+  straight into a folder you pick; on other browsers it sends them to your downloads one
+  after another. Each collage also has its own Save button, and a `.zip` is kept only as a
+  fallback for browsers that refuse multiple downloads (notably iOS Safari).
 
 ## Notes and limits
 
@@ -64,4 +67,4 @@ free with no usage cost.
 | `index.html` | markup and controls |
 | `styles.css` | mobile-first responsive styling |
 | `app.js` | file handling, ordering, canvas rendering, downloads |
-| `zip.js` | dependency-free STORE-only ZIP writer for *Download all* |
+| `zip.js` | dependency-free STORE-only ZIP writer, used only by the `.zip` fallback |

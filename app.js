@@ -13,7 +13,8 @@ const el = {
   format: $('format'), quality: $('quality'), qualityVal: $('qualityVal'),
   transparent: $('transparent'), maxMp: $('maxMp'), prefix: $('prefix'),
   generate: $('generate'), status: $('status'), barWrap: $('barWrap'), bar: $('bar'),
-  resultsCard: $('resultsCard'), results: $('results'), zipBtn: $('zipBtn'),
+  resultsCard: $('resultsCard'), results: $('results'),
+  saveAllBtn: $('saveAllBtn'), zipBtn: $('zipBtn'), saveHint: $('saveHint'),
 };
 
 const state = { items: [], results: [], added: 0, busy: false };
@@ -292,12 +293,16 @@ function clearResults() {
   for (const r of state.results) if (r.url) URL.revokeObjectURL(r.url);
   state.results = [];
   el.results.textContent = '';
+  el.saveHint.textContent = '';
   el.resultsCard.hidden = true;
 }
 
 function showResult(r) {
   r.url = URL.createObjectURL(r.blob);
   el.resultsCard.hidden = false;
+  el.saveHint.textContent = canPickFolder
+    ? 'Save all writes every collage straight into a folder you pick — no zip to open.'
+    : 'Save all downloads the collages one after another; your browser may ask once to allow multiple files. Each row below also has its own Save button.';
   const li = document.createElement('li');
   const img = document.createElement('img');
   img.src = r.url;
@@ -319,15 +324,64 @@ function showResult(r) {
   el.results.append(li);
 }
 
+const canPickFolder = typeof window.showDirectoryPicker === 'function';
+
+function saveOne(r) {
+  const a = document.createElement('a');
+  a.href = r.url;
+  a.download = r.name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+}
+
+/* Chrome/Edge on desktop: write every file into one folder the user picks. */
+async function saveToFolder() {
+  const dir = await window.showDirectoryPicker({ mode: 'readwrite', id: 'collages' });
+  let n = 0;
+  for (const r of state.results) {
+    const handle = await dir.getFileHandle(r.name, { create: true });
+    const writable = await handle.createWritable();
+    await writable.write(r.blob);
+    await writable.close();
+    n++;
+    setStatus(`Saving ${n} / ${state.results.length}…`);
+  }
+  setStatus(`Saved ${n} file${n > 1 ? 's' : ''} to the folder you chose`);
+}
+
+/* Everywhere else: fire the downloads one at a time. Browsers throttle bursts,
+   hence the gap; some ask once for permission to save multiple files. */
+async function saveSeparately() {
+  for (let i = 0; i < state.results.length; i++) {
+    saveOne(state.results[i]);
+    setStatus(`Sending ${i + 1} / ${state.results.length} to downloads…`);
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  setStatus(`Sent ${state.results.length} file(s) to your downloads`);
+}
+
+async function saveAll() {
+  if (!state.results.length) return;
+  el.saveAllBtn.disabled = true;
+  try {
+    if (canPickFolder) await saveToFolder();
+    else await saveSeparately();
+  } catch (err) {
+    if (err && err.name === 'AbortError') setStatus(''); // folder picker dismissed
+    else await saveSeparately();
+  }
+  el.saveAllBtn.disabled = false;
+}
+
 async function downloadZip() {
   if (!state.results.length) return;
   el.zipBtn.disabled = true;
   const prev = el.zipBtn.textContent;
-  el.zipBtn.textContent = 'Packing\u2026';
+  el.zipBtn.textContent = 'Packing…';
   const entries = [];
   for (const r of state.results) entries.push({ name: r.name, data: new Uint8Array(await r.blob.arrayBuffer()) });
-  const blob = makeZip(entries);
-  const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(makeZip(entries));
   const a = document.createElement('a');
   a.href = url;
   a.download = `${(el.prefix.value.trim() || 'collage')}s.zip`;
@@ -476,6 +530,7 @@ for (const c of [el.sort, el.reverse, el.doAll, el.doSplit, el.allCols, el.allRo
 }
 
 el.generate.onclick = generate;
+el.saveAllBtn.onclick = saveAll;
 el.zipBtn.onclick = downloadZip;
 
 render();
