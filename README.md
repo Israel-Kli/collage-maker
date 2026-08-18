@@ -60,6 +60,13 @@ Opening `index.html` directly from disk also works.
 GitHub Pages serves static files only, which is all this needs. Public repos get Pages for
 free with no usage cost.
 
+## Editing it
+
+GitHub Pages serves assets with a ~10 minute cache, so after changing `app.js`,
+`styles.css` or `zip.js` you must bump the `?v=` number on the matching tag in
+`index.html`. Without that, people who already visited keep running the old version
+until the cache expires.
+
 ## Files
 
 | File | Purpose |
